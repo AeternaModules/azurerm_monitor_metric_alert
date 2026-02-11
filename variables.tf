@@ -53,15 +53,15 @@ EOT
     name                     = string
     resource_group_name      = string
     scopes                   = set(string)
-    auto_mitigate            = optional(bool, true)
+    auto_mitigate            = optional(bool) # Default: true
     description              = optional(string)
-    enabled                  = optional(bool, true)
-    frequency                = optional(string, "PT1M")
-    severity                 = optional(number, 3)
+    enabled                  = optional(bool)   # Default: true
+    frequency                = optional(string) # Default: "PT1M"
+    severity                 = optional(number) # Default: 3
     tags                     = optional(map(string))
     target_resource_location = optional(string)
     target_resource_type     = optional(string)
-    window_size              = optional(string, "PT5M")
+    window_size              = optional(string) # Default: "PT5M"
     action = optional(object({
       action_group_id    = string
       webhook_properties = optional(map(string))
@@ -71,7 +71,7 @@ EOT
       failed_location_count = number
       web_test_id           = string
     }))
-    criteria = optional(object({
+    criteria = optional(list(object({
       aggregation = string
       dimension = optional(object({
         name     = string
@@ -81,9 +81,9 @@ EOT
       metric_name            = string
       metric_namespace       = string
       operator               = string
-      skip_metric_validation = optional(bool, false)
+      skip_metric_validation = optional(bool) # Default: false
       threshold              = number
-    }))
+    })))
     dynamic_criteria = optional(object({
       aggregation       = string
       alert_sensitivity = string
@@ -92,8 +92,8 @@ EOT
         operator = string
         values   = list(string)
       }))
-      evaluation_failure_count = optional(number, 4)
-      evaluation_total_count   = optional(number, 4)
+      evaluation_failure_count = optional(number) # Default: 4
+      evaluation_total_count   = optional(number) # Default: 4
       ignore_data_before       = optional(string)
       metric_name              = string
       metric_namespace         = string
@@ -101,5 +101,13 @@ EOT
       skip_metric_validation   = optional(bool)
     }))
   }))
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.criteria == null || (length(v.criteria) >= 1)
+      )
+    ])
+    error_message = "Each criteria list must contain at least 1 items"
+  }
 }
 

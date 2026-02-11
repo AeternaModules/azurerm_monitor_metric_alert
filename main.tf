@@ -32,7 +32,7 @@ resource "azurerm_monitor_metric_alert" "monitor_metric_alerts" {
   }
 
   dynamic "criteria" {
-    for_each = each.value.criteria != null ? [each.value.criteria] : []
+    for_each = each.value.criteria != null ? each.value.criteria : []
     content {
       aggregation = criteria.value.aggregation
       dynamic "dimension" {
