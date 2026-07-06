@@ -109,5 +109,172 @@ EOT
     ])
     error_message = "Each criteria list must contain at least 1 items"
   }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        length(v.name) > 0
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (length(v.dynamic_criteria.metric_namespace) > 0)
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (length(v.dynamic_criteria.metric_name) > 0)
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (contains(["Average", "Count", "Minimum", "Maximum", "Total"], v.dynamic_criteria.aggregation))
+      )
+    ])
+    error_message = "must be one of: Average, Count, Minimum, Maximum, Total"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (v.dynamic_criteria.dimension == null || (length(v.dynamic_criteria.dimension.name) > 0))
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (v.dynamic_criteria.dimension == null || (contains(["Include", "Exclude", "StartsWith"], v.dynamic_criteria.dimension.operator)))
+      )
+    ])
+    error_message = "must be one of: Include, Exclude, StartsWith"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (v.dynamic_criteria.evaluation_total_count == null || (v.dynamic_criteria.evaluation_total_count >= 1))
+      )
+    ])
+    error_message = "must be at least 1"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.dynamic_criteria == null || (v.dynamic_criteria.evaluation_failure_count == null || (v.dynamic_criteria.evaluation_failure_count >= 1))
+      )
+    ])
+    error_message = "must be at least 1"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.application_insights_web_test_location_availability_criteria == null || (v.application_insights_web_test_location_availability_criteria.failed_location_count >= 1)
+      )
+    ])
+    error_message = "must be at least 1"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.frequency == null || (contains(["PT1M", "PT5M", "PT15M", "PT30M", "PT1H"], v.frequency))
+      )
+    ])
+    error_message = "must be one of: PT1M, PT5M, PT15M, PT30M, PT1H"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.severity == null || (v.severity >= 0 && v.severity <= 4)
+      )
+    ])
+    error_message = "must be between 0 and 4"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.monitor_metric_alerts : (
+        v.window_size == null || (contains(["PT1M", "PT5M", "PT15M", "PT30M", "PT1H", "PT6H", "PT12H", "P1D"], v.window_size))
+      )
+    ])
+    error_message = "must be one of: PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H, P1D"
+  }
+  # --- Unconfirmed validation candidates, derived from azurerm_monitor_metric_alert's provider source ---
+  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
+  # or a path that crosses a list-typed block (needs its own for_each wrapping).
+  # Review, translate into a real validation{} block above, and delete once confirmed.
+  # path: resource_group_name
+  #   condition: length(value) <= 90
+  #   message:   [from resourcegroups.ValidateName: invalid when len(value) > 90]
+  #   source:    [from resourcegroups.ValidateName: invalid when len(value) > 90]
+  # path: resource_group_name
+  #   condition: !endswith(value, ".")
+  #   message:   [from resourcegroups.ValidateName: must not end with "."]
+  #   source:    [from resourcegroups.ValidateName: must not end with "."]
+  # path: resource_group_name
+  #   condition: length(value) != 0
+  #   message:   [from resourcegroups.ValidateName: invalid when len(value) == 0]
+  #   source:    [from resourcegroups.ValidateName: invalid when len(value) == 0]
+  # path: resource_group_name
+  #   source:    [from resourcegroups.ValidateName] !matched
+  # path: scopes[*]
+  #   source:    [from azure.ValidateResourceID] !ok
+  # path: scopes[*]
+  #   source:    [from azure.ValidateResourceID] err != nil
+  # path: criteria.metric_namespace
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: criteria.metric_name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: criteria.aggregation
+  #   condition: contains(["Average", "Count", "Minimum", "Maximum", "Total"], value)
+  #   message:   must be one of: Average, Count, Minimum, Maximum, Total
+  # path: criteria.dimension.name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: criteria.dimension.operator
+  #   condition: contains(["Include", "Exclude", "StartsWith"], value)
+  #   message:   must be one of: Include, Exclude, StartsWith
+  # path: criteria.operator
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: dynamic_criteria.operator
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: dynamic_criteria.alert_sensitivity
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: dynamic_criteria.ignore_data_before
+  #   source:    validation.IsRFC3339Time(...) - no translation rule yet, add one
+  # path: application_insights_web_test_location_availability_criteria.web_test_id
+  #   source:    [from webtests.ValidateWebTestID] !ok
+  # path: application_insights_web_test_location_availability_criteria.web_test_id
+  #   source:    [from webtests.ValidateWebTestID] err != nil
+  # path: application_insights_web_test_location_availability_criteria.component_id
+  #   source:    [from components.ValidateComponentID] !ok
+  # path: application_insights_web_test_location_availability_criteria.component_id
+  #   source:    [from components.ValidateComponentID] err != nil
+  # path: action.action_group_id
+  #   source:    [from azure.ValidateResourceID] !ok
+  # path: action.action_group_id
+  #   source:    [from azure.ValidateResourceID] err != nil
+  # path: tags
+  #   condition: length(value) <= 50
+  #   message:   [from tags.Validate: invalid when len(value) > 50]
+  #   source:    [from tags.Validate: invalid when len(value) > 50]
+  # path: tags
+  #   condition: length(value) <= 512
+  #   message:   [from tags.Validate: invalid when len(value) > 512]
+  #   source:    [from tags.Validate: invalid when len(value) > 512]
+  # path: tags
+  #   source:    [from tags.Validate] err != nil
+  # path: tags
+  #   condition: length(value) <= 256
+  #   message:   [from tags.Validate: invalid when len(value) > 256]
+  #   source:    [from tags.Validate: invalid when len(value) > 256]
 }
 
