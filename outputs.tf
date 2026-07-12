@@ -1,3 +1,7 @@
+output "monitor_metric_alerts_id" {
+  description = "Map of id values across all monitor_metric_alerts, keyed the same as var.monitor_metric_alerts"
+  value       = { for k, v in azurerm_monitor_metric_alert.monitor_metric_alerts : k => v.id }
+}
 output "monitor_metric_alerts_action" {
   description = "Map of action values across all monitor_metric_alerts, keyed the same as var.monitor_metric_alerts"
   value       = { for k, v in azurerm_monitor_metric_alert.monitor_metric_alerts : k => v.action }
