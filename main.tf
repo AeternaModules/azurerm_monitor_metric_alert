@@ -15,7 +15,7 @@ resource "azurerm_monitor_metric_alert" "monitor_metric_alerts" {
   window_size              = each.value.window_size
 
   dynamic "action" {
-    for_each = each.value.action != null ? [each.value.action] : []
+    for_each = each.value.action != null ? each.value.action : []
     content {
       action_group_id    = action.value.action_group_id
       webhook_properties = action.value.webhook_properties
@@ -36,7 +36,7 @@ resource "azurerm_monitor_metric_alert" "monitor_metric_alerts" {
     content {
       aggregation = criteria.value.aggregation
       dynamic "dimension" {
-        for_each = criteria.value.dimension != null ? [criteria.value.dimension] : []
+        for_each = criteria.value.dimension != null ? criteria.value.dimension : []
         content {
           name     = dimension.value.name
           operator = dimension.value.operator
@@ -57,7 +57,7 @@ resource "azurerm_monitor_metric_alert" "monitor_metric_alerts" {
       aggregation       = dynamic_criteria.value.aggregation
       alert_sensitivity = dynamic_criteria.value.alert_sensitivity
       dynamic "dimension" {
-        for_each = dynamic_criteria.value.dimension != null ? [dynamic_criteria.value.dimension] : []
+        for_each = dynamic_criteria.value.dimension != null ? dynamic_criteria.value.dimension : []
         content {
           name     = dimension.value.name
           operator = dimension.value.operator

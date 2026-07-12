@@ -62,10 +62,10 @@ EOT
     target_resource_location = optional(string)
     target_resource_type     = optional(string)
     window_size              = optional(string) # Default: "PT5M"
-    action = optional(object({
+    action = optional(list(object({
       action_group_id    = string
       webhook_properties = optional(map(string))
-    }))
+    })))
     application_insights_web_test_location_availability_criteria = optional(object({
       component_id          = string
       failed_location_count = number
@@ -73,11 +73,11 @@ EOT
     }))
     criteria = optional(list(object({
       aggregation = string
-      dimension = optional(object({
+      dimension = optional(list(object({
         name     = string
         operator = string
         values   = list(string)
-      }))
+      })))
       metric_name            = string
       metric_namespace       = string
       operator               = string
@@ -87,11 +87,11 @@ EOT
     dynamic_criteria = optional(object({
       aggregation       = string
       alert_sensitivity = string
-      dimension = optional(object({
+      dimension = optional(list(object({
         name     = string
         operator = string
         values   = list(string)
-      }))
+      })))
       evaluation_failure_count = optional(number) # Default: 4
       evaluation_total_count   = optional(number) # Default: 4
       ignore_data_before       = optional(string)
@@ -109,106 +109,13 @@ EOT
     ])
     error_message = "Each criteria list must contain at least 1 items"
   }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        length(v.name) > 0
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (length(v.dynamic_criteria.metric_namespace) > 0)
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (length(v.dynamic_criteria.metric_name) > 0)
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (contains(["Average", "Count", "Minimum", "Maximum", "Total"], v.dynamic_criteria.aggregation))
-      )
-    ])
-    error_message = "must be one of: Average, Count, Minimum, Maximum, Total"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (v.dynamic_criteria.dimension == null || (length(v.dynamic_criteria.dimension.name) > 0))
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (v.dynamic_criteria.dimension == null || (contains(["Include", "Exclude", "StartsWith"], v.dynamic_criteria.dimension.operator)))
-      )
-    ])
-    error_message = "must be one of: Include, Exclude, StartsWith"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (v.dynamic_criteria.evaluation_total_count == null || (v.dynamic_criteria.evaluation_total_count >= 1))
-      )
-    ])
-    error_message = "must be at least 1"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.dynamic_criteria == null || (v.dynamic_criteria.evaluation_failure_count == null || (v.dynamic_criteria.evaluation_failure_count >= 1))
-      )
-    ])
-    error_message = "must be at least 1"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.application_insights_web_test_location_availability_criteria == null || (v.application_insights_web_test_location_availability_criteria.failed_location_count >= 1)
-      )
-    ])
-    error_message = "must be at least 1"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.frequency == null || (contains(["PT1M", "PT5M", "PT15M", "PT30M", "PT1H"], v.frequency))
-      )
-    ])
-    error_message = "must be one of: PT1M, PT5M, PT15M, PT30M, PT1H"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.severity == null || (v.severity >= 0 && v.severity <= 4)
-      )
-    ])
-    error_message = "must be between 0 and 4"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.window_size == null || (contains(["PT1M", "PT5M", "PT15M", "PT30M", "PT1H", "PT6H", "PT12H", "P1D"], v.window_size))
-      )
-    ])
-    error_message = "must be one of: PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H, P1D"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_monitor_metric_alert's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
   # Review, translate into a real validation{} block above, and delete once confirmed.
+  # path: name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
   # path: resource_group_name
   #   condition: length(value) <= 90
   #   message:   [from resourcegroups.ValidateName: invalid when len(value) > 90]
@@ -244,10 +151,31 @@ EOT
   #   message:   must be one of: Include, Exclude, StartsWith
   # path: criteria.operator
   #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: dynamic_criteria.metric_namespace
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: dynamic_criteria.metric_name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: dynamic_criteria.aggregation
+  #   condition: contains(["Average", "Count", "Minimum", "Maximum", "Total"], value)
+  #   message:   must be one of: Average, Count, Minimum, Maximum, Total
+  # path: dynamic_criteria.dimension.name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: dynamic_criteria.dimension.operator
+  #   condition: contains(["Include", "Exclude", "StartsWith"], value)
+  #   message:   must be one of: Include, Exclude, StartsWith
   # path: dynamic_criteria.operator
   #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
   # path: dynamic_criteria.alert_sensitivity
   #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: dynamic_criteria.evaluation_total_count
+  #   condition: value >= 1
+  #   message:   must be at least 1
+  # path: dynamic_criteria.evaluation_failure_count
+  #   condition: value >= 1
+  #   message:   must be at least 1
   # path: dynamic_criteria.ignore_data_before
   #   source:    validation.IsRFC3339Time(...) - no translation rule yet, add one
   # path: application_insights_web_test_location_availability_criteria.web_test_id
@@ -258,10 +186,22 @@ EOT
   #   source:    [from components.ValidateComponentID] !ok
   # path: application_insights_web_test_location_availability_criteria.component_id
   #   source:    [from components.ValidateComponentID] err != nil
+  # path: application_insights_web_test_location_availability_criteria.failed_location_count
+  #   condition: value >= 1
+  #   message:   must be at least 1
   # path: action.action_group_id
   #   source:    [from azure.ValidateResourceID] !ok
   # path: action.action_group_id
   #   source:    [from azure.ValidateResourceID] err != nil
+  # path: frequency
+  #   condition: contains(["PT1M", "PT5M", "PT15M", "PT30M", "PT1H"], value)
+  #   message:   must be one of: PT1M, PT5M, PT15M, PT30M, PT1H
+  # path: severity
+  #   condition: value >= 0 && value <= 4
+  #   message:   must be between 0 and 4
+  # path: window_size
+  #   condition: contains(["PT1M", "PT5M", "PT15M", "PT30M", "PT1H", "PT6H", "PT12H", "P1D"], value)
+  #   message:   must be one of: PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H, P1D
   # path: tags
   #   condition: length(value) <= 50
   #   message:   [from tags.Validate: invalid when len(value) > 50]
