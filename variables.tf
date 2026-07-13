@@ -53,15 +53,15 @@ EOT
     name                     = string
     resource_group_name      = string
     scopes                   = set(string)
-    auto_mitigate            = optional(bool) # Default: true
+    auto_mitigate            = optional(bool)
     description              = optional(string)
-    enabled                  = optional(bool)   # Default: true
-    frequency                = optional(string) # Default: "PT1M"
-    severity                 = optional(number) # Default: 3
+    enabled                  = optional(bool)
+    frequency                = optional(string)
+    severity                 = optional(number)
     tags                     = optional(map(string))
     target_resource_location = optional(string)
     target_resource_type     = optional(string)
-    window_size              = optional(string) # Default: "PT5M"
+    window_size              = optional(string)
     action = optional(list(object({
       action_group_id    = string
       webhook_properties = optional(map(string))
@@ -81,7 +81,7 @@ EOT
       metric_name            = string
       metric_namespace       = string
       operator               = string
-      skip_metric_validation = optional(bool) # Default: false
+      skip_metric_validation = optional(bool)
       threshold              = number
     })))
     dynamic_criteria = optional(object({
@@ -92,8 +92,8 @@ EOT
         operator = string
         values   = list(string)
       })))
-      evaluation_failure_count = optional(number) # Default: 4
-      evaluation_total_count   = optional(number) # Default: 4
+      evaluation_failure_count = optional(number)
+      evaluation_total_count   = optional(number)
       ignore_data_before       = optional(string)
       metric_name              = string
       metric_namespace         = string
@@ -101,14 +101,6 @@ EOT
       skip_metric_validation   = optional(bool)
     }))
   }))
-  validation {
-    condition = alltrue([
-      for k, v in var.monitor_metric_alerts : (
-        v.criteria == null || (length(v.criteria) >= 1)
-      )
-    ])
-    error_message = "Each criteria list must contain at least 1 items"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_monitor_metric_alert's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
