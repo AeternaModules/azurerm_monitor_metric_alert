@@ -8,7 +8,7 @@ output "monitor_metric_alerts_action" {
 }
 output "monitor_metric_alerts_application_insights_web_test_location_availability_criteria" {
   description = "Map of application_insights_web_test_location_availability_criteria values across all monitor_metric_alerts, keyed the same as var.monitor_metric_alerts"
-  value       = { for k, v in azurerm_monitor_metric_alert.monitor_metric_alerts : k => v.application_insights_web_test_location_availability_criteria if v.application_insights_web_test_location_availability_criteria != null && length(v.application_insights_web_test_location_availability_criteria) > 0 }
+  value       = { for k, v in azurerm_monitor_metric_alert.monitor_metric_alerts : k => one(v.application_insights_web_test_location_availability_criteria) if v.application_insights_web_test_location_availability_criteria != null && length(v.application_insights_web_test_location_availability_criteria) > 0 }
 }
 output "monitor_metric_alerts_auto_mitigate" {
   description = "Map of auto_mitigate values across all monitor_metric_alerts, keyed the same as var.monitor_metric_alerts"
@@ -24,7 +24,7 @@ output "monitor_metric_alerts_description" {
 }
 output "monitor_metric_alerts_dynamic_criteria" {
   description = "Map of dynamic_criteria values across all monitor_metric_alerts, keyed the same as var.monitor_metric_alerts"
-  value       = { for k, v in azurerm_monitor_metric_alert.monitor_metric_alerts : k => v.dynamic_criteria if v.dynamic_criteria != null && length(v.dynamic_criteria) > 0 }
+  value       = { for k, v in azurerm_monitor_metric_alert.monitor_metric_alerts : k => one(v.dynamic_criteria) if v.dynamic_criteria != null && length(v.dynamic_criteria) > 0 }
 }
 output "monitor_metric_alerts_enabled" {
   description = "Map of enabled values across all monitor_metric_alerts, keyed the same as var.monitor_metric_alerts"
